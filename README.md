@@ -1,0 +1,2 @@
+rhq-switchyard-plugin
+=====================
