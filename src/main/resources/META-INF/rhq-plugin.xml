@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<plugin name="SwitchYard"
+        displayName="SwitchYard"
+        version="1.0"
+        description="Monitoring of SwitchYard Deployments"
+        package="org.switchyard.rhq.plugin"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="urn:xmlns:rhq-plugin"
+        xmlns:c="urn:xmlns:rhq-configuration">
+
+   <depends plugin="JBossAS7" useClasses="true"/>
+
+   <service name="Deployments"
+            discovery="JBossAS7JMXDiscoveryComponent"
+            class="JBossAS7JMXComponent"
+            description="Container for SwitchYard Deployment JMX MBeans"
+            singleton="true"
+            classLoader="instance">
+
+      <runs-inside>
+         <parent-resource-type name="JBossAS7 Standalone Server" plugin="JBossAS7"/>
+         <parent-resource-type name="Managed Server" plugin="JBossAS7"/>
+      </runs-inside>
+
+      <plugin-configuration>
+         <c:simple-property name="hostname" type="string" default="127.0.0.1"
+             description="Management IP Address - this is typically the jboss.bind.address.management address. Initialized to hostname of parent JBoss Server resource." />
+
+         <c:simple-property name="port" type="integer" default="9999"
+             description="JMX Management Port used to communicate with the app server over the JMX protocol. Initialized to management port + 9 (the standard offset) of parent JBoss Server." />
+
+         <c:simple-property name="username" type="string" default="rhqadmin"
+             description="Management user.  Initialized to the management user of parent JBoss Server resource." />
+
+         <c:simple-property name="password" type="password" default="rhqadmin"
+             description="Management user credentials. Initialized to the management user credentials of parent JBoss Server resource." />
+
+         <c:simple-property name="clientJarLocation" type="directory" required="true"
+             description="The directory where the AS client jar(s) are located. Whatever jars are located in here are placed in the plugin classloader." />
+      </plugin-configuration>
+
+      <service name="Application"
+               description="A SwitchYard Application deployed into the container"
+               discovery="org.rhq.plugins.jmx.MBeanResourceDiscoveryComponent"
+               class="org.rhq.plugins.jmx.MBeanResourceComponent">
+
+         <plugin-configuration>
+            <c:simple-property name="objectName"
+                               default="org.switchyard.admin:type=Application,name=%applicationName%"
+                               readOnly="true"/>
+            <c:simple-property name="applicationName" readOnly="true"/>
+            <c:simple-property name="nameTemplate" default="{applicationName}" readOnly="true"/>
+         </plugin-configuration>
+         
+         <service name="Service"
+                  description="A SwitchYard Service within an Application"
+                  discovery="IndirectResourceDiscoveryComponent"
+                  class="IndirectResourceComponent">
+            <plugin-configuration>
+               <c:simple-property name="attributeName"
+                                  default="Services"
+                                  readOnly="true"/>
+               <c:simple-property name="beanPrefix"
+                                  default="org.switchyard.admin:type=Service,name="
+                                  readOnly="true"/>
+            </plugin-configuration>
+
+            <!--  Combine this into the service? -->
+            <service name="Throttling Operation"
+                     description="Throttling component for the SwitchYard Service"
+                     discovery="IndirectResourceDiscoveryComponent"
+                     class="IndirectResourceComponent">
+               <plugin-configuration>
+                  <c:simple-property name="attributeName"
+                                     default="Throttling"
+                                     readOnly="true"/>
+                  <c:simple-property name="objectNameAttribute"
+                                     default="service"
+                                     readOnly="true"/>
+               </plugin-configuration>
+               <operation name="isEnabled" displayName="Is throttling enabled."
+                    description="Is throttling enabled for this service?"/>
+               <operation name="enable" displayName="Enable throttling"
+                    description="Enable throttling for this service."/>
+               <operation name="disable" displayName="Disable throttling"
+                    description="Disable throttling for this service."/>
+               <operation name="getTimePeriod" displayName="Get Time Period"
+                    description="The throttling time period."/>
+               <operation name="getMaxRequests" displayName="Get Max Requests"
+                    description="The maximum requests within the time period."/>
+               <operation name="setMaxRequests" displayName="Set Max Requests"
+                    description="Set the maximum requests within the time period.">
+                  <parameters>
+                     <c:simple-property name="maxRequests" type="integer"
+                                        description="The maximum requests within the time period."/>
+                  </parameters>
+               </operation>
+            </service>
+
+            <service name="Service Bindings"
+                     description="Bindings for the SwitchYard Service"
+                     discovery="IndirectResourceDiscoveryComponent"
+                     class="IndirectResourceComponent">
+               <plugin-configuration>
+                  <c:simple-property name="attributeName"
+                                     default="Bindings"
+                                     readOnly="true"/>
+                  <c:simple-property name="objectNameAttribute"
+                                     default="name"
+                                     readOnly="true"/>
+               </plugin-configuration>
+               <operation name="start" displayName="Start"
+                          description="Start the binding."/>
+               <operation name="stop" displayName="Stop"
+                          description="Stop the binding."/>
+               <operation name="getState" displayName="State"
+                          description="Get the lifecycle state of the binding."/>
+               <operation name="reset" displayName="Reset Metrics"
+                          description="Reset the metrics for this service."/>
+
+               <metric property="SuccessCount"
+                       description="The number of successful invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="FaultCount"
+                       description="The number of invocations resulting in faults"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="TotalCount"
+                       description="The total number of invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="TotalProcessingTime"
+                       description="The total processing time for all invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="AverageProcessingTime"
+                       description="The average processing time for an invocation"
+                       displayType="summary"/>
+               <metric property="MinProcessingTime"
+                       description="The minimum processing time for an invocation"
+                       displayType="summary"/>
+               <metric property="MaxProcessingTime"
+                       description="The maximum processing time for an invocation"
+                       displayType="summary"/>
+            </service>
+         </service>
+
+         <service name="Reference"
+                  description="A Reference within a SwitchYard Application"
+                  discovery="IndirectResourceDiscoveryComponent"
+                  class="IndirectResourceComponent">
+            <plugin-configuration>
+               <c:simple-property name="attributeName"
+                                  default="References"
+                                  readOnly="true"/>
+               <c:simple-property name="beanPrefix"
+                                  default="org.switchyard.admin:type=Reference,name="
+                                  readOnly="true"/>
+            </plugin-configuration>
+
+            <operation name="reset" displayName="Reset Metrics"
+                       description="Reset the metrics for this service."/>
+
+            <metric property="SuccessCount"
+                    description="The number of successful invocations"
+                    displayType="summary"
+                    measurementType="trendsup"/>
+            <metric property="FaultCount"
+                    description="The number of invocations resulting in faults"
+                    displayType="summary"
+                    measurementType="trendsup"/>
+            <metric property="TotalCount"
+                    description="The total number of invocations"
+                    displayType="summary"
+                    measurementType="trendsup"/>
+            <metric property="TotalProcessingTime"
+                    description="The total processing time for all invocations"
+                    displayType="summary"
+                       measurementType="trendsup"/>
+            <metric property="AverageProcessingTime"
+                    description="The average processing time for an invocation"
+                    displayType="summary"/>
+            <metric property="MinProcessingTime"
+                    description="The minimum processing time for an invocation"
+                    displayType="summary"/>
+            <metric property="MaxProcessingTime"
+                    description="The maximum processing time for an invocation"
+                    displayType="summary"/>
+            
+            <service name="Reference Bindings"
+                     description="Bindings for the SwitchYard Reference"
+                     discovery="IndirectResourceDiscoveryComponent"
+                     class="IndirectResourceComponent">
+               <plugin-configuration>
+                  <c:simple-property name="attributeName"
+                                     default="Bindings"
+                                     readOnly="true"/>
+                  <c:simple-property name="objectNameAttribute"
+                                     default="name"
+                                     readOnly="true"/>
+               </plugin-configuration>
+               <operation name="start" displayName="Start"
+                          description="Start the binding."/>
+               <operation name="stop" displayName="Stop"
+                          description="Stop the binding."/>
+               <operation name="getState" displayName="State"
+                          description="Get the lifecycle state of the binding."/>
+               <operation name="reset" displayName="Reset Metrics"
+                          description="Reset the metrics for this service."/>
+
+               <metric property="SuccessCount"
+                       description="The number of successful invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="FaultCount"
+                       description="The number of invocations resulting in faults"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="TotalCount"
+                       description="The total number of invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="TotalProcessingTime"
+                       description="The total processing time for all invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="AverageProcessingTime"
+                       description="The average processing time for an invocation"
+                       displayType="summary"/>
+               <metric property="MinProcessingTime"
+                       description="The minimum processing time for an invocation"
+                       displayType="summary"/>
+               <metric property="MaxProcessingTime"
+                       description="The maximum processing time for an invocation"
+                       displayType="summary"/>
+            </service>
+         </service>
+         
+         <service name="Component Service"
+                  description="A Component Service within an Application"
+                  discovery="IndirectResourceDiscoveryComponent"
+                  class="IndirectResourceComponent">
+            <plugin-configuration>
+               <c:simple-property name="attributeName"
+                                  default="ComponentServices"
+                                  readOnly="true"/>
+               <c:simple-property name="beanPrefix"
+                                  default="org.switchyard.admin:type=ComponentService,name="
+                                  readOnly="true"/>
+            </plugin-configuration>
+            
+            <operation name="reset" displayName="Reset Metrics"
+                       description="Reset the metrics for this service."/>
+
+            <metric property="SuccessCount"
+                    description="The number of successful invocations"
+                    displayType="summary"
+                    measurementType="trendsup"/>
+            <metric property="FaultCount"
+                    description="The number of invocations resulting in faults"
+                    displayType="summary"
+                    measurementType="trendsup"/>
+            <metric property="TotalCount"
+                    description="The total number of invocations"
+                    displayType="summary"
+                    measurementType="trendsup"/>
+            <metric property="TotalProcessingTime"
+                    description="The total processing time for all invocations"
+                    displayType="summary"
+                    measurementType="trendsup"/>
+            <metric property="AverageProcessingTime"
+                    description="The average processing time for an invocation"
+                    displayType="summary"/>
+            <metric property="MinProcessingTime"
+                    description="The minimum processing time for an invocation"
+                    displayType="summary"/>
+            <metric property="MaxProcessingTime"
+                    description="The maximum processing time for an invocation"
+                    displayType="summary"/>
+            
+            <service name="Component Reference"
+                     description="References for the SwitchYard Component Service"
+                     discovery="IndirectResourceDiscoveryComponent"
+                     class="IndirectResourceComponent">
+               <plugin-configuration>
+                  <c:simple-property name="attributeName"
+                                     default="References"
+                                     readOnly="true"/>
+                  <c:simple-property name="beanPrefix"
+                                     default='org.switchyard.admin:type=ComponentReference,service="%serviceName%",name='
+                                     readOnly="true"/>
+                  <c:simple-property name="parentName" default="serviceName"
+                                     readOnly="true"/>
+               </plugin-configuration>
+               <operation name="reset" displayName="Reset Metrics"
+                          description="Reset the metrics for this service."/>
+
+               <metric property="SuccessCount"
+                       description="The number of successful invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="FaultCount"
+                       description="The number of invocations resulting in faults"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="TotalCount"
+                       description="The total number of invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="TotalProcessingTime"
+                       description="The total processing time for all invocations"
+                       displayType="summary"
+                       measurementType="trendsup"/>
+               <metric property="AverageProcessingTime"
+                       description="The average processing time for an invocation"
+                       displayType="summary"/>
+               <metric property="MinProcessingTime"
+                       description="The minimum processing time for an invocation"
+                       displayType="summary"/>
+               <metric property="MaxProcessingTime"
+                       description="The maximum processing time for an invocation"
+                       displayType="summary"/>
+            </service>
+         </service>
+      </service>
+    </service>
+
+</plugin>
