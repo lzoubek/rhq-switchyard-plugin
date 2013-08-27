@@ -79,23 +79,20 @@
                                      default="service"
                                      readOnly="true"/>
                </plugin-configuration>
-               <operation name="isEnabled" displayName="Is throttling enabled."
-                    description="Is throttling enabled for this service?"/>
                <operation name="enable" displayName="Enable throttling"
                     description="Enable throttling for this service."/>
                <operation name="disable" displayName="Disable throttling"
                     description="Disable throttling for this service."/>
-               <operation name="getTimePeriod" displayName="Get Time Period"
-                    description="The throttling time period."/>
-               <operation name="getMaxRequests" displayName="Get Max Requests"
-                    description="The maximum requests within the time period."/>
-               <operation name="setMaxRequests" displayName="Set Max Requests"
-                    description="Set the maximum requests within the time period.">
-                  <parameters>
-                     <c:simple-property name="maxRequests" type="integer"
-                                        description="The maximum requests within the time period."/>
-                  </parameters>
-               </operation>
+
+               <metric property="Enabled" displayName="Is throttling enabled."
+                    description="Is throttling enabled for this service?"
+                    dataType="trait"/>
+               <metric property="TimePeriod" displayName="Get Time Period"
+                    description="The throttling time period."
+                    dataType="trait"/>
+               <metric property="MaxRequests" displayName="Get Max Requests"
+                    description="The maximum requests within the time period."
+                    dataType="trait"/>
             </service>
 
             <service name="Service Bindings"
