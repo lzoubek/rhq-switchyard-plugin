@@ -114,11 +114,13 @@
                           description="Start the binding."/>
                <operation name="stop" displayName="Stop"
                           description="Stop the binding."/>
-               <operation name="getState" displayName="State"
-                          description="Get the lifecycle state of the binding."/>
                <operation name="reset" displayName="Reset Metrics"
                           description="Reset the metrics for this service."/>
 
+               <metric property="State"
+                       description="Get the lifecycle state of the binding."
+                       displayType="summary"
+                       dataType="trait"/>
                <metric property="SuccessCount"
                        description="The number of successful invocations"
                        displayType="summary"
@@ -205,11 +207,13 @@
                           description="Start the binding."/>
                <operation name="stop" displayName="Stop"
                           description="Stop the binding."/>
-               <operation name="getState" displayName="State"
-                          description="Get the lifecycle state of the binding."/>
                <operation name="reset" displayName="Reset Metrics"
                           description="Reset the metrics for this service."/>
 
+               <metric property="State"
+                       description="Get the lifecycle state of the binding."
+                       displayType="summary"
+                       dataType="trait"/>
                <metric property="SuccessCount"
                        description="The number of successful invocations"
                        displayType="summary"
