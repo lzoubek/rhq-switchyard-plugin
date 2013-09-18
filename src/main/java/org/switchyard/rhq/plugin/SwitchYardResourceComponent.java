@@ -179,8 +179,10 @@ public class SwitchYardResourceComponent extends BaseSwitchYardResourceComponent
             synchronized(this) {
                 if (now - switchYardMetricsTimestamp.get() > REFRESH) {
                     metrics = loadSwitchYardMetrics();
-                    switchYardMetrics.set(metrics);
-                    switchYardMetricsTimestamp.set(System.currentTimeMillis());
+                    if (metrics != null) {
+                        switchYardMetrics.set(metrics);
+                        switchYardMetricsTimestamp.set(System.currentTimeMillis());
+                    }
                 }
             }
             metrics = switchYardMetrics.get();
@@ -243,7 +245,7 @@ public class SwitchYardResourceComponent extends BaseSwitchYardResourceComponent
     
     private SwitchYardMetrics loadSwitchYardMetrics() {
         final SwitchYardMetrics[] metrics = execute(new ReadSwitchYardMetrics(), SwitchYardMetrics[].class);
-        return metrics[0];
+        return (metrics == null ? null : metrics[0]);
     }
     
     private ServiceMetrics[] loadServiceMetrics() {
