@@ -104,7 +104,8 @@ public class SwitchYardResourceComponent extends BaseSwitchYardResourceComponent
 
     @Override
     public AvailabilityType getAvailability() {
-        return AvailabilityType.UP;
+        final SwitchYardMetrics metrics = getSwitchYardMetrics();
+        return (metrics == null) ? AvailabilityType.DOWN : AvailabilityType.UP;
     }
 
     protected Log getLog() {
