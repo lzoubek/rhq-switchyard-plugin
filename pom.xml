@@ -34,7 +34,7 @@
 
         <dependency>
           <groupId>org.rhq</groupId>
-          <artifactId>rhq-jmx-plugin</artifactId>
+          <artifactId>rhq-jboss-as-7-plugin</artifactId>
           <version>${version.rhq}</version>
           <scope>provided</scope>
         </dependency>
