@@ -75,11 +75,11 @@
             <operation name="reset" displayName="Reset Metrics"
                  description="Reset the metrics for this service."/>
 
-            <metric property="throttlingEnabled" displayName="Is throttling enabled."
+            <metric property="throttlingEnabled" displayName="Is throttling enabled"
                     description="Is throttling enabled for this service?"
                     dataType="trait"/>
             <metric property="TimePeriod" displayName="Get Time Period"
-                    description="The throttling time period."
+                    description="The throttling time period"
                     dataType="trait"/>
             <metric property="MaxRequests" displayName="Get Max Requests"
                     description="The maximum requests within the time period."
